@@ -11,6 +11,7 @@
  "MINIMUM_ENG_BALANCE": "10",
  "DEPOSIT_AMOUNT": 10,
  "ETH_KEY_PATH": "/root/p2p/",
+ "ETHEREUM_ADDR_FILENAME": "eth_address.txt",
  "LOCAL_LIBP2P_KEY_PATH": "/root/p2p/scripts/bootstrap/",
  "LIBP2P_KEY_PATH": "/root/p2p/libp2p/",
  "BOOTSTRAP_ID": "B1",
