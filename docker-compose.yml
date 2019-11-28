@@ -31,6 +31,7 @@ services:
     ports:
       - "3346:3346"
       - "9229:9229"
+      - "9876:9876"
 
   worker:
     hostname: worker

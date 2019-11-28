@@ -1,6 +1,8 @@
 import logging
 import json
 import os
+import subprocess
+import time
 from pathlib import Path
 import web3
 from flask import Flask, request
@@ -16,10 +18,10 @@ logger = get_logger('worker.management_backend')
 logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-env_defaults = {'K8S': './config/k8s_config.json',
-                'TESTNET': './config/testnet_config.json',
-                'MAINNET': './config/mainnet_config.json',
-                'COMPOSE': './config/compose_config.json'}
+env_defaults = {'K8S': './p2p/config/k8s_config.json',
+                'TESTNET': './p2p/config/testnet_config.json',
+                'MAINNET': './p2p/config/mainnet_config.json',
+                'COMPOSE': './p2p/config/compose_config.json'}
 
 try:
     config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
@@ -35,8 +37,11 @@ CORS(application)
 
 api = Api(app=application, version='1.0')
 ns = api.namespace('ethereum', description='Contract operations')
-
+worker = api.namespace('worker', description='Contract operations')
+status = ''
 eth_address = ''
+
+
 def get_eth_address():
     global eth_address
     if eth_address:
@@ -45,6 +50,29 @@ def get_eth_address():
     with open(filename, 'r') as f:
         eth_address = f.read()
         return eth_address
+
+
+def get_status():
+    global status
+    filename = f'{config["ETH_KEY_PATH"]}{config["STATUS_FILENAME"]}'
+    with open(filename, 'r') as f:
+        status = f.read()
+        return status
+
+
+def stop_worker():
+    subprocess.call(["supervisorctl", "stop", "p2p"])
+
+
+def register_workaround():
+    stop_worker()
+    time.sleep(5)
+    start_worker()
+
+
+def start_worker():
+    subprocess.call(["supervisorctl", "start", "p2p"])
+
 
 @ns.route("/address")
 class GetAddress(Resource):
@@ -63,14 +91,41 @@ class GetAddress(Resource):
 
 
 @ns.route("/balance")
-class GetAddress(Resource):
-    """ returns a list of tracked addresses for a chain/network. If parameters are empty, will return
-    all addresses """
-    @ns.param('name', 'Key management address filename -- by default right now can only be principal-sign-addr.txt', 'query')
+class GetBalance(Resource):
+    """ returns balance for current ethereum account """
     def get(self):
         account = w3.toChecksumAddress(get_eth_address())
         val = w3.fromWei(w3.eth.getBalance(account), 'ether')
         return str(val)
+
+
+@worker.route("/status")
+class GetStatus(Resource):
+    """ returns a list of tracked addresses for a chain/network. If parameters are empty, will return
+    all addresses """
+    def get(self):
+        return get_status()
+
+
+@worker.route("/stop")
+class StopWorker(Resource):
+    """ Stop the worker (actually just stops the p2p) """
+    def post(self):
+        return stop_worker()
+
+
+@worker.route("/start")
+class StartWorker(Resource):
+    """ Start the worker (actually just starts the p2p) """
+    def post(self):
+        return start_worker()
+
+
+@worker.route("/register")
+class StartWorker(Resource):
+    """ Start the worker (actually just starts the p2p) """
+    def post(self):
+        return register_workaround()
 
 
 def run(port):
