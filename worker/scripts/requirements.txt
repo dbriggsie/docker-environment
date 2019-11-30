@@ -1,1 +1,6 @@
 enigma_docker_common==0.2.4
+web3
+requests
+flask
+flask_cors
+flask_restplus
