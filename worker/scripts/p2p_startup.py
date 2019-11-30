@@ -97,7 +97,7 @@ def main():
     keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
     password = config.get('PASSWORD', 'cupcake')  # :)
     private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
-    update_status('LOADED_ETH')
+    update_status('STARTING')
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
     try:
         get_initial_coins(eth_address, 'ETH', config)
@@ -111,6 +111,9 @@ def main():
 
     if env in ['COMPOSE', 'TESTNET', 'K8S']:
         sleep(20)
+
+        update_status('AUTO APPROVE')
+
         # tell the p2p to automatically log us in and do the deposit for us
         login_and_deposit = True
 
@@ -127,7 +130,7 @@ def main():
         val = erc20_contract.check_allowance(eth_address, provider.enigma_contract_address)
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {eth_address}: {val} ENG')
 
-    update_status('READY')
+        update_status('LOGGING IN')
 
     if is_bootstrap:
         p2p_runner = P2PNode(bootstrap=True,
@@ -156,6 +159,7 @@ def main():
                              deposit_amount=deposit_amount,
                              login_and_deposit=login_and_deposit,
                              min_confirmations=config["MIN_CONFIRMATIONS"])
+
 
     # Setting workdir to the base path of the executable, because everything is fragile
     os.chdir(pathlib.Path(executable).parent)

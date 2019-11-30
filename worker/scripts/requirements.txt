@@ -4,3 +4,5 @@ requests
 flask
 flask_cors
 flask_restplus
+gunicorn
+gevent

@@ -91,8 +91,6 @@ RUN pip3 install \
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
 COPY --from=p2p_build /app ./p2p/
 
-EXPOSE 8080
-
 COPY config/core ./core/config
 COPY config/p2p ./p2p/config
 

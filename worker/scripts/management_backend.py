@@ -15,13 +15,13 @@ from enigma_docker_common.config import Config
 from enigma_docker_common.logger import get_logger
 logger = get_logger('worker.management_backend')
 
-logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
-logging.getLogger("werkzeug").setLevel(logging.ERROR)
+# logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
+# logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-env_defaults = {'K8S': './p2p/config/k8s_config.json',
-                'TESTNET': './p2p/config/testnet_config.json',
-                'MAINNET': './p2p/config/mainnet_config.json',
-                'COMPOSE': './p2p/config/compose_config.json'}
+env_defaults = {'K8S': '/root/p2p/config/k8s_config.json',
+                'TESTNET': '/root/p2p/config/testnet_config.json',
+                'MAINNET': '/root/p2p/config/mainnet_config.json',
+                'COMPOSE': '/root/p2p/config/compose_config.json'}
 
 try:
     config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
@@ -130,13 +130,8 @@ class StartWorker(Resource):
 
 def run(port):
     logger.debug("using port:"+str(port))
-    application.run(host='0.0.0.0', port=port, debug=False)
+    application.run(host='0.0.0.0', port=9876, debug=True)
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-
-    parser = ArgumentParser()
-    parser.add_argument('-p', '--port', default=9876, type=int, help='port to listen on')
-    args = parser.parse_args()
-    run(args.port)
+    run(9876)

@@ -79,13 +79,13 @@ class P2PNode(threading.Thread):
     def _kill(self, signum, frame):
         if self.proc:
             logger.info('Logging out...')
-            self.proc.stdin.write(b'logout\n')
-            self.proc.stdin.flush()
-            time.sleep(2)
+            # self.proc.stdin.write(b'logout\n')
+            # self.proc.stdin.flush()
+            # time.sleep(2)
             self.proc.send_signal(signal.SIGINT)
-            time.sleep(2)
-            self.proc.terminate()
-            self.proc.wait(timeout=0.2)
+            # time.sleep(2)
+            # self.proc.terminate()
+            self.proc.wait(timeout=10)
             del self.proc
             self.proc = None
             self.kill_now = True
