@@ -77,7 +77,7 @@ def main():
         bootstrap_config_path = bootstrap_path + bootstrap_id
 
         # file must be .json since p2p will try to use require(). Can remove when p2p is changed
-        save_to_path(bootstrap_config_path+'.json', keyfile)
+        save_to_path(bootstrap_config_path + '.json', keyfile)
 
         bootstrap_path = bootstrap_config_path
 
@@ -110,9 +110,9 @@ def main():
         exit(-1)
 
     if env in ['COMPOSE', 'TESTNET', 'K8S']:
-        sleep(20)
+        # sleep(20)
 
-        update_status('AUTO APPROVE')
+        update_status('APPROVING')
 
         # tell the p2p to automatically log us in and do the deposit for us
         login_and_deposit = True
@@ -124,13 +124,16 @@ def main():
         # todo: when we switch this key to be inside the enclave, or encrypted, modify this
         erc20_contract.approve(eth_address,
                                provider.enigma_contract_address,
-                               deposit_amount,
+                               deposit_amount * 10,
                                key=bytes.fromhex(private_key[2:]))
 
         val = erc20_contract.check_allowance(eth_address, provider.enigma_contract_address)
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {eth_address}: {val} ENG')
-
-        update_status('LOGGING IN')
+        if val >= deposit_amount:
+            update_status('READY_TO_REGISTER')
+        else:
+            logger.error(f'Allownace amount {val} is under deposit limit {deposit_amount}')
+            update_status('ALLOWNACE_ERROR')
 
     if is_bootstrap:
         p2p_runner = P2PNode(bootstrap=True,
@@ -145,8 +148,9 @@ def main():
                              bootstrap_address=bootstrap_address,
                              key_mgmt_node=config["KEY_MANAGEMENT_ADDRESS"],
                              deposit_amount=deposit_amount,
-                             login_and_deposit=login_and_deposit,
-                             min_confirmations=config["MIN_CONFIRMATIONS"])
+                             login_and_deposit=True,
+                             min_confirmations=config["MIN_CONFIRMATIONS"],
+                             auto_init=True)
     else:
         p2p_runner = P2PNode(bootstrap=False,
                              ethereum_key=private_key,
@@ -159,7 +163,6 @@ def main():
                              deposit_amount=deposit_amount,
                              login_and_deposit=login_and_deposit,
                              min_confirmations=config["MIN_CONFIRMATIONS"])
-
 
     # Setting workdir to the base path of the executable, because everything is fragile
     os.chdir(pathlib.Path(executable).parent)

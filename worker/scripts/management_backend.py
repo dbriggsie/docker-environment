@@ -15,8 +15,8 @@ from enigma_docker_common.config import Config
 from enigma_docker_common.logger import get_logger
 logger = get_logger('worker.management_backend')
 
-# logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
-# logging.getLogger("werkzeug").setLevel(logging.ERROR)
+logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 env_defaults = {'K8S': '/root/p2p/config/k8s_config.json',
                 'TESTNET': '/root/p2p/config/testnet_config.json',
@@ -65,9 +65,23 @@ def stop_worker():
 
 
 def register_workaround():
-    stop_worker()
-    time.sleep(5)
-    start_worker()
+    subprocess.call(["supervisorctl", "signal", "SIGURG", "p2p"])
+
+
+def logout_worker():
+    subprocess.call(["supervisorctl", "signal", "SIGUSR2", "p2p"])
+
+
+def login_worker():
+    subprocess.call(["supervisorctl", "signal", "SIGUSR1", "p2p"])
+
+
+def deposit():
+    subprocess.call(["supervisorctl", "signal", "SIGSYS", "p2p"])
+
+
+def withdraw():
+    subprocess.call(["supervisorctl", "signal", "64", "p2p"])
 
 
 def start_worker():
@@ -83,8 +97,8 @@ class GetAddress(Resource):
         try:
             return get_eth_address()
         except FileNotFoundError as e:
-            logger.error(f'File not found: {e}')
-            return abort(404)
+            logger.error(f'Ethereum address not created yet')
+            return 'N/A'
         except json.JSONDecodeError as e:
             logger.error(f'Error decoding config file. Is it valid JSON? {e}')
             return abort(500)
@@ -94,7 +108,11 @@ class GetAddress(Resource):
 class GetBalance(Resource):
     """ returns balance for current ethereum account """
     def get(self):
-        account = w3.toChecksumAddress(get_eth_address())
+        try:
+            account = w3.toChecksumAddress(get_eth_address())
+        except FileNotFoundError:
+            logger.error(f'Ethereum address not created yet')
+            return 'N/A'
         val = w3.fromWei(w3.eth.getBalance(account), 'ether')
         return str(val)
 
@@ -126,6 +144,34 @@ class StartWorker(Resource):
     """ Start the worker (actually just starts the p2p) """
     def post(self):
         return register_workaround()
+
+
+@worker.route("/login")
+class LoginWorker(Resource):
+    """ Start the worker (actually just starts the p2p) """
+    def post(self):
+        return login_worker()
+
+
+@worker.route("/deposit")
+class DepositWorker(Resource):
+    """ Start the worker (actually just starts the p2p) """
+    def post(self):
+        return deposit()
+
+
+@worker.route("/logout")
+class LogoutWorker(Resource):
+    """ Start the worker (actually just starts the p2p) """
+    def post(self):
+        return logout_worker()
+
+
+@worker.route("/withdraw")
+class LogoutWorker(Resource):
+    """ Start the worker (actually just starts the p2p) """
+    def post(self):
+        return withdraw()
 
 
 def run(port):

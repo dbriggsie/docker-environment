@@ -68,6 +68,41 @@ class P2PNode(threading.Thread):
         atexit.register(self.stop)
         signal.signal(signal.SIGINT, self._kill)
         signal.signal(signal.SIGTERM, self._kill)
+        signal.signal(signal.SIGUSR1, self.login)
+        signal.signal(signal.SIGUSR2, self.logout)
+        signal.signal(signal.SIGURG, self.register)
+        signal.signal(signal.SIGSYS, self.deposit)
+        signal.signal(signal.SIGRTMAX, self.withdraw)
+
+    def deposit(self, signum, frame):
+        if self.proc:
+            logger.info('Depositing...')
+            self.proc.stdin.write(b'deposit ' + str(self.deposit_amount).encode() + b'\n')
+            self.proc.stdin.flush()
+
+    def withdraw(self, signum, frame):
+        if self.proc:
+            logger.info('Withdrawing...')
+            self.proc.stdin.write(b'withdraw ' + str(self.deposit_amount).encode() + b'\n')
+            self.proc.stdin.flush()
+
+    def login(self, signum, frame):
+        if self.proc:
+            logger.info('Logging in...')
+            self.proc.stdin.write(b'login\n')
+            self.proc.stdin.flush()
+
+    def logout(self, signum, frame):
+        if self.proc:
+            logger.info('Logging out...')
+            self.proc.stdin.write(b'logout\n')
+            self.proc.stdin.flush()
+
+    def register(self, signum, frame):
+        if self.proc:
+            logger.info('Registering...')
+            self.proc.stdin.write(b'register\n')
+            self.proc.stdin.flush()
 
     def run(self):
         self._start()
