@@ -13,7 +13,6 @@ services:
       - KEY_MANAGEMENT_DISCOVERY=http://km.app.services.enigma.co:8081
       - BOOTSTRAP_ADDRESS=/dnsaddr/bootstrap-1.app.services.enigma.co/tcp/10300/ipfs/QmWWkYjEKrfxPcW9z3xWVpDh8DrwHZC7GLjkFkBvocUzZT,/dnsaddr/bootstrap-2.app.services.enigma.co/tcp/10300/ipfs/QmVzK7PgMLbafjVeLtL5QZ4iu1FnM9jPoNWywcWfhg8fJY,/dnsaddr/bootstrap-3.app.services.enigma.co/tcp/10300/ipfs/QmQzbNA7zX75z8gL1U2uKpRXbapnHogPf2jPCTazHBuoSK
       # - MIN_CONFIRMATIONS=
-      # - FORCE_NEW_ETH_ADDR=true
     ports:
       - "3346:3346"   # Json RPC
       - "10300:10300" # LibP2P

@@ -80,7 +80,7 @@ COPY config/p2p ./p2p/config
 COPY scripts/core_startup.py ./core/
 COPY scripts ./p2p/scripts
 
-RUN chmod +x ./p2p/scripts/p2p_startup.py && chmod +x ./core/core_startup.py
+RUN chmod +x ./p2p/scripts/p2p_startup.py && chmod +x ./core/core_startup.py && chmod +x ./p2p/scripts/cli.py
 
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -89,5 +89,10 @@ ENV LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm:/opt/sgxsdk/sdk_libs:/
 ENV PKG_CONFIG_PATH=:/opt/sgxsdk/pkgconfig:/opt/sgxsdk/pkgconfig
 ENV SGX_SDK=/opt/sgxsdk
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/sgxsdk/bin:/opt/sgxsdk/bin/x64:/opt/sgxsdk/bin:/opt/sgxsdk/bin/x64
+
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+RUN ln -s /root/p2p/scripts/cli.py /usr/bin/cli
 
 CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

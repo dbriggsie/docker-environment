@@ -12,6 +12,8 @@
  "DEPOSIT_AMOUNT": 10,
  "ETH_KEY_PATH": "/root/p2p/",
  "STAKE_KEY_PATH": "/root/p2p/staking/",
+ "STAKE_KEY_NAME": "staking_address",
+ "STATUS_FILENAME": "status",
  "LOCAL_LIBP2P_KEY_PATH": "/root/p2p/scripts/bootstrap/",
  "LIBP2P_KEY_PATH": "/root/p2p/libp2p/",
  "BOOTSTRAP_ID": "B1",
@@ -22,5 +24,6 @@
  "MIN_CONFIRMATIONS": 12,
  "KEY_MANAGEMENT_TIMEOUT": 120,
  "CONTRACT_TIMEOUT": 3600,
- "HEALTH_CHECK_PORT": 12345
+ "HEALTH_CHECK_PORT": 12345,
+ "ETHEREUM_ADDR_FILENAME": "eth_address.txt"
 }

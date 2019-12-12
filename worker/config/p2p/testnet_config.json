@@ -18,5 +18,9 @@
  "MIN_CONFIRMATIONS": 12,
  "KEY_MANAGEMENT_TIMEOUT": 120,
  "CONTRACT_TIMEOUT": 3600,
- "HEALTH_CHECK_PORT": 12345
+ "HEALTH_CHECK_PORT": 12345,
+  "STAKE_KEY_PATH": "/root/p2p/staking/",
+ "STAKE_KEY_NAME": "staking_address",
+ "STATUS_FILENAME": "status",
+ "ETHEREUM_ADDR_FILENAME": "ethereum-sign-addr.txt"
 }

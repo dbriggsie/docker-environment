@@ -1,1 +1,8 @@
 enigma_docker_common
+click
+PyInquirer==1.0.3
+pyfiglet
+termcolor
+progressbar2
+six
+requests

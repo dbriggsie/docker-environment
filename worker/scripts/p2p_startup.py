@@ -55,17 +55,44 @@ def check_eth_limit(account: str,
     if min_ether > cur_balance:
         logger.info(f'Ethereum balance {cur_balance} is less than the minimum amount {min_ether} ETH required to start '
                     f'the worker. Please transfer currency to the worker account: {account} and restart the worker')
-        exit(0)
+        return False
+    return True
     # if allowance_limit > float(erc20.check_allowance(enigma_contract_address, account)):
     #     logger.info(f'{currency} balance is less than the minimum amount {min_ether}ETH required to start the worker'
     #                 f' Please transfer currency to the worker account: {account}')
 
 
+def get_staking_key():
+    filename = f'{config["STAKE_KEY_PATH"]}{config["STAKE_KEY_NAME"]}'
+    with open(filename, 'r') as f:
+        staking_address = f.read()
+        return staking_address
+
+
+def set_status(new_status: str) -> None:
+    filename = f'{config["ETH_KEY_PATH"]}{config["STATUS_FILENAME"]}'
+    with open(filename, 'w+') as f:
+        f.write(new_status)
+
+
 def main():
+    set_status('DOWN')
+
+    import time
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
+    if not is_bootstrap:
+        while True:
+            try:
+                staking_address = get_staking_key()
+                break
+            except FileNotFoundError:
+                logger.info('Waiting for staking address..')
+                time.sleep(2)
 
-    logger.info('Setting up worker...')
+        logger.info(f'Got staking address {staking_address}')
+
+    logger.info('Worker startup started...')
     logger.info(f'Running for environment: {env}')
 
     provider = Provider(config=config)
@@ -119,6 +146,8 @@ def main():
                                          provider.token_contract_address,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
+    set_status("ETH_LOW")
+    time.sleep(10)
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
     if env in ['COMPOSE', 'K8S']:
 
@@ -144,6 +173,8 @@ def main():
             logger.critical(f'Failed to connect to remote address: Error: {e}')
             exit(-1)
 
+        set_status("STARTING")
+
         # tell the p2p to automatically log us in and do the deposit for us
         login_and_deposit = True
 
@@ -163,7 +194,11 @@ def main():
     if env in ['TESTNET', 'MAINNET']:
         staking_address = config["STAKING_ADDRESS"]
 
-    check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node)
+    logger.info(f'Staking address: {staking_address}, eth_address: {eth_address}')
+
+    while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
+        set_status("ETH_LOW")
+        time.sleep(2)
 
     kwargs = {'ethereum_key': private_key,
               'public_address': eth_address,
@@ -175,7 +210,8 @@ def main():
               'contract_address': eng_contract_addr,
               'login_and_deposit': login_and_deposit,
               'health_check_port': config["HEALTH_CHECK_PORT"],
-              'min_confirmations': config["MIN_CONFIRMATIONS"]}
+              'min_confirmations': config["MIN_CONFIRMATIONS"],
+              'auto_init': False}
 
     if is_bootstrap:
         p2p_runner = P2PNode(bootstrap=True,
@@ -184,6 +220,7 @@ def main():
                              bootstrap_port=bootstrap_port,
                              **kwargs)
     else:
+        kwargs["login_and_deposit"] = False
         p2p_runner = P2PNode(bootstrap=False,
                              **kwargs)
 
@@ -191,8 +228,10 @@ def main():
     os.chdir(pathlib.Path(executable).parent)
     import time
     p2p_runner.start()
+    set_status("STARTED")
     while not p2p_runner.kill_now:
         time.sleep(2)
+        set_status("DOWN")
         # add cleanup here if necessary
 
 
